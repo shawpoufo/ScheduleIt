@@ -1,0 +1,6 @@
+services:
+  app:
+    image: ${DOCKER_REGISTRY-}app
+    build:
+      context: .
+      dockerfile: App/Dockerfile
