@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Customers.Commands.CreateCustomer;
 using Application.Customers.Queries.GetCustomer;
+using Application.Customers.Queries.SearchCustomers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -49,6 +50,29 @@ namespace Api.Controllers
             catch (Application.Common.ValidationException ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Searches customers by name or lists all customers
+        /// </summary>
+        /// <param name="search">Optional search term to filter customers by name</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>List of customers matching the search criteria</returns>
+        /// <response code="200">Customers found and returned</response>
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchCustomers([FromQuery] string? search, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var query = new SearchCustomersQuery(search);
+                var customers = await _mediator.Send(query, cancellationToken);
+                return Ok(customers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while searching customers" });
             }
         }
 
