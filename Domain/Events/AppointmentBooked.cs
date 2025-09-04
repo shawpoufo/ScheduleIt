@@ -1,22 +1,19 @@
 using System;
 using Domain.Common;
-using MediatR;
+using Domain.ValueObjects;
 
 namespace Domain.Events
 {
-    public sealed class AppointmentBooked : IDomainEvent, INotification
+    public sealed class AppointmentBooked : IDomainEvent
     {
         public Guid CustomerId { get; }
-        public DateTime StartUtc { get; }
-        public DateTime EndUtc { get; }
+        public AppointmentTimeSlot TimeSlot { get; }
 
-        public AppointmentBooked(Guid customerId, DateTime startUtc, DateTime endUtc)
+        public AppointmentBooked(Guid customerId, AppointmentTimeSlot timeSlot)
         {
             CustomerId = customerId;
-            StartUtc = startUtc;
-            EndUtc = endUtc;
+            TimeSlot = timeSlot;
         }
     }
 }
-
 

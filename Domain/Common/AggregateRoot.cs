@@ -10,6 +10,10 @@ namespace Domain.Common
     {
         private readonly List<IDomainEvent> _domainEvents = new();
 
+        protected AggregateRoot() : base()
+        {
+        }
+
         protected AggregateRoot(Guid id)
             : base(id)
         {

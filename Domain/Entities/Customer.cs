@@ -7,12 +7,12 @@ using Domain.Common;
 
 namespace Domain.Entities
 {
-    public class Customer : AggregateRoot
+    public class Customer : Entity
     {
         public string Name { get; private set; } = string.Empty;
         public string Email { get; private set; } = string.Empty;
 
-        private Customer() { } // For EF Core
+        private Customer():base(Guid.NewGuid()) { } // For EF Core
 
         public Customer(Guid id, string name, string email) : base(id)
         {

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Domain.Common;
 using Domain.Events;
+using Domain.ValueObjects;
 
 namespace Domain.Entities
 {
@@ -12,25 +9,88 @@ namespace Domain.Entities
     public sealed class Appointment : AggregateRoot
     {
         public Guid CustomerId { get; private set; }
-        public DateTime StartUtc { get; private set; }
-        public DateTime EndUtc { get; private set; } // Start + 30m
+        public AppointmentTimeSlot TimeSlot { get; private set; }
+        public AppointmentStatus Status { get; private set; }
 
-        private Appointment(Guid customerId , DateTime startUtc) : base(Guid.NewGuid())
+        // Parameterless constructor for EF Core
+        private Appointment() : base(Guid.NewGuid())
+        {
+            Status = AppointmentStatus.Scheduled;
+        }
+
+        private Appointment(Guid customerId, AppointmentTimeSlot timeSlot) : base(Guid.NewGuid())
         {
             CustomerId = customerId;
-            StartUtc = startUtc;
+            TimeSlot = timeSlot;
+            Status = AppointmentStatus.Scheduled;
         }
 
-        public static Appointment Create(Guid customerId, DateTime startUtc)
+        public static Appointment Create(Guid customerId, DateTime startUtc, DateTime now)
         {
-            var end = startUtc.AddMinutes(30);
-            var app = new Appointment(customerId, startUtc);
-            app.EndUtc = end;
-            app.AddEvent(new AppointmentBooked(customerId, startUtc, end));
-            return app;
+            var timeSlot = AppointmentTimeSlot.Create(startUtc, now);
+
+            var appointment = new Appointment(customerId, timeSlot);
+            appointment.AddEvent(new AppointmentBooked(customerId, timeSlot));
+            return appointment;
         }
 
-        public void Cancel() => AddEvent(new AppointmentCanceled(Id));
-    }
+        public void Cancel(DateTime now)
+        {
+            if (Status == AppointmentStatus.Canceled)
+                throw new InvalidOperationException("Appointment is already canceled.");
 
+            // Domain invariant: Prevent cancel after start
+            if (TimeSlot.StartUtc <= now)
+                throw new InvalidOperationException("Cannot cancel an appointment that has already started or finished.");
+
+            Status = AppointmentStatus.Canceled;
+            AddEvent(new AppointmentCanceled(Id));
+        }
+
+        public void MarkAsCompleted()
+        {
+            if (Status == AppointmentStatus.Canceled)
+                throw new InvalidOperationException("Cannot mark a canceled appointment as completed.");
+
+            if (Status == AppointmentStatus.Completed)
+                throw new InvalidOperationException("Appointment is already marked as completed.");
+
+            Status = AppointmentStatus.Completed;
+        }
+
+        public void MarkAsInProgress()
+        {
+            if (Status == AppointmentStatus.Canceled)
+                throw new InvalidOperationException("Cannot mark a canceled appointment as in progress.");
+
+            if (Status == AppointmentStatus.Completed)
+                throw new InvalidOperationException("Cannot mark a completed appointment as in progress.");
+
+            if (Status == AppointmentStatus.InProgress)
+                throw new InvalidOperationException("Appointment is already in progress.");
+
+            Status = AppointmentStatus.InProgress;
+        }
+
+        public void MarkAsNoShow()
+        {
+            if (Status == AppointmentStatus.Canceled)
+                throw new InvalidOperationException("Cannot mark a canceled appointment as no-show.");
+
+            if (Status == AppointmentStatus.Completed)
+                throw new InvalidOperationException("Cannot mark a completed appointment as no-show.");
+
+            if (Status == AppointmentStatus.NoShow)
+                throw new InvalidOperationException("Appointment is already marked as no-show.");
+
+            Status = AppointmentStatus.NoShow;
+        }
+
+        public bool IsOverlapping(DateTime startTime, DateTime endTime)
+        {
+            return Status != AppointmentStatus.Canceled && TimeSlot.IsOverlapping(startTime, endTime);
+        }
+
+        public bool IsActive => Status == AppointmentStatus.Scheduled || Status == AppointmentStatus.InProgress;
+    }
 }
