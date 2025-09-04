@@ -4,4 +4,8 @@
     {
 
     }
+
+    public static class Application
+    {
+    }
 }
