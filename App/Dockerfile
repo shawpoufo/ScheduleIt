@@ -15,7 +15,7 @@ COPY ["App/App.csproj", "App/"]
 COPY ["Application/Application.csproj", "Application/"]
 COPY ["Domain/Domain.csproj", "Domain/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
-COPY ["Presentation/Presentation.csproj", "Presentation/"]
+COPY ["Api/Api.csproj", "Api/"]
 RUN dotnet restore "./App/App.csproj"
 COPY . .
 WORKDIR "/src/App"
