@@ -47,9 +47,9 @@ namespace Api.Controllers
                 var customerId = await _mediator.Send(command, cancellationToken);
                 return CreatedAtAction(nameof(GetCustomer), new { id = customerId }, new { id = customerId });
             }
-            catch (Application.Common.ValidationException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return ProblemDetailsMapper.Map(ex);
             }
         }
 
@@ -72,7 +72,7 @@ namespace Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = "An error occurred while searching customers" });
+                return ProblemDetailsMapper.Map(ex);
             }
         }
 
@@ -95,9 +95,9 @@ namespace Api.Controllers
                 var customer = await _mediator.Send(query, cancellationToken);
                 return Ok(customer);
             }
-            catch (Application.Common.NotFoundException ex)
+            catch (Exception ex)
             {
-                return NotFound(new { error = ex.Message });
+                return ProblemDetailsMapper.Map(ex);
             }
         }
     }

@@ -4,13 +4,18 @@ using Infrastructure;
 using Application.Common;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers()
-                .AddApplicationPart(typeof(Api.Class1).Assembly);
+                .AddApplicationPart(typeof(Api.Class1).Assembly)
+                .AddJsonOptions(o =>
+                {
+                    o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 
@@ -34,6 +39,18 @@ builder.Services.AddSwaggerGen(c =>
     
     // Add operation filters for better documentation
     c.CustomSchemaIds(type => type.Name);
+});
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Vite dev server and React dev server
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
 });
 
 // Application + Infrastructure
@@ -71,6 +88,9 @@ app.UseExceptionHandler(errorApp =>
         await context.Response.WriteAsJsonAsync(error);
     });
 });
+
+// Enable CORS
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
