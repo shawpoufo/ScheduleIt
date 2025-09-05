@@ -103,5 +103,11 @@ namespace Domain.Entities
         }
 
         public bool IsActive => Status == AppointmentStatus.Scheduled || Status == AppointmentStatus.InProgress;
+
+        public void EnsureCanBeDeleted()
+        {
+            if (Status != AppointmentStatus.Scheduled)
+                throw new DomainRuleViolationException("Only scheduled appointments can be deleted.");
+        }
     }
 }

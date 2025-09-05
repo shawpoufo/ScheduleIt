@@ -35,6 +35,8 @@ const CalendarPage: React.FC = () => {
   const [statusSaving, setStatusSaving] = useState<boolean>(false);
   const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const statusOptions: AppointmentStatus[] = ['Scheduled','InProgress','Completed','Canceled','NoShow'];
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState<Date>(new Date());
@@ -100,6 +102,7 @@ const CalendarPage: React.FC = () => {
   React.useEffect(() => {
     setPendingStatus(selected?.status ?? null);
     setStatusError(null);
+    setDeleteError(null);
   }, [selected]);
 
   // Create appointment modal state
@@ -408,6 +411,9 @@ const CalendarPage: React.FC = () => {
                   {statusError && (
                     <div className="mt-2 text-xs text-[var(--danger-color)]">{statusError}</div>
                   )}
+                  {deleteError && (
+                    <div className="mt-2 text-xs text-[var(--danger-color)]">{deleteError}</div>
+                  )}
                 </div>
                 <button
                   className="inline-flex w-full items-center justify-center rounded-md bg-[var(--primary-color)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -438,6 +444,33 @@ const CalendarPage: React.FC = () => {
                   }}
                 >
                   {statusSaving ? 'Saving…' : 'Save changes'}
+                </button>
+                <button
+                  className="inline-flex w-full items-center justify-center rounded-md border border-[var(--danger-color)] bg-rose-50 px-3 py-2 text-sm font-semibold text-[var(--danger-color)] hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isDeleting || selected.status !== 'Scheduled'}
+                  onClick={async () => {
+                    if (!selected) return;
+                    const confirmed = window.confirm('Delete this appointment? This action cannot be undone.');
+                    if (!confirmed) return;
+                    setIsDeleting(true);
+                    setDeleteError(null);
+                    try {
+                      const r = await fetch(`${API_BASE_URL}/api/appointments/${selected.id}`, { method: 'DELETE' });
+                      const data = await r.json().catch(() => ({} as any));
+                      if (!r.ok) {
+                        const msg = (data && (data.error || data.title)) || 'Failed to delete appointment';
+                        throw new Error(msg);
+                      }
+                      setEvents((prev) => prev.filter(ev => ev.id !== selected.id));
+                      setSelected(null);
+                    } catch (err: any) {
+                      setDeleteError(err?.message || 'Unable to delete appointment');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }}
+                >
+                  {isDeleting ? 'Deleting…' : 'Delete appointment'}
                 </button>
                 <button
                   className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"

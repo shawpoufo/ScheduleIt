@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using Application.Appointments.Queries.GetAppointmentsInRange;
 using Application.Appointments.Commands.UpdateAppointmentStatus;
 using Application.Appointments.Queries.GetTodayStats;
+using Application.Appointments.Commands.DeleteAppointment;
 
 namespace Api.Controllers
 {
@@ -149,6 +150,29 @@ namespace Api.Controllers
             {
                 var newStatus = await _mediator.Send(command, cancellationToken);
                 return Ok(new { id, status = newStatus });
+            }
+            catch (Exception ex)
+            {
+                return ProblemDetailsMapper.Map(ex);
+            }
+        }
+
+        /// <summary>
+        /// Permanently deletes an appointment
+        /// </summary>
+        /// <param name="id">Appointment ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <response code="204">Appointment deleted</response>
+        /// <response code="404">Appointment not found</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete([Required] Guid id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _mediator.Send(new DeleteAppointmentCommand(id), cancellationToken);
+                return NoContent();
             }
             catch (Exception ex)
             {

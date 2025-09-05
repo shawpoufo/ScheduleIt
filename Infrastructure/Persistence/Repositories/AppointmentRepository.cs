@@ -30,6 +30,11 @@ namespace Infrastructure.Persistence.Repositories
             _context.Appointments.Add(appointment);
         }
 
+        public void Remove(Appointment appointment)
+        {
+            _context.Appointments.Remove(appointment);
+        }
+
         public async Task<List<Appointment>> GetInRangeAsync(DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
         {
             return await _context.Appointments

@@ -11,6 +11,7 @@ namespace Domain.Repositories
         Task<int> CountTodayAsync(DateTime todayUtc, CancellationToken cancellationToken = default);
         Task<List<Appointment>> GetUpcomingTodayAsync(DateTime nowUtc, int limit, CancellationToken cancellationToken = default);
         void Add(Appointment appointment);
+        void Remove(Appointment appointment);
     }
 }
 
