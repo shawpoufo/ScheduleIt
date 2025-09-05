@@ -40,6 +40,17 @@ namespace Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Customer>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idList = ids.Distinct().ToList();
+            if (idList.Count == 0)
+                return new List<Customer>();
+
+            return await _context.Customers
+                .Where(c => idList.Contains(c.Id))
+                .ToListAsync(cancellationToken);
+        }
+
         public void Add(Customer customer)
         {
             _context.Customers.Add(customer);

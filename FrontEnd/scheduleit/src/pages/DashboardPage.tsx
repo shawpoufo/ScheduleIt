@@ -2,7 +2,7 @@ import React from 'react';
 import { API_BASE_URL } from '../config/api';
 import { format } from 'date-fns';
 
-type TodayUpcoming = { appointmentId: string; customerId: string; startUtc: string; endUtc: string };
+type TodayUpcoming = { appointmentId: string; customerId: string; startUtc: string; endUtc: string; customerName: string };
 type TodayStats = { totalAppointments: number; todayAppointments: number; upcomingToday: TodayUpcoming[] };
 
 const DashboardPage: React.FC = () => {
@@ -73,7 +73,7 @@ const DashboardPage: React.FC = () => {
               <tr key={u.appointmentId} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{format(new Date(u.startUtc), 'PPpp')}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{format(new Date(u.endUtc), 'PPpp')}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.customerId}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.customerName || u.customerId}</td>
               </tr>
             ))}
           </tbody>

@@ -17,7 +17,8 @@ namespace Application.Appointments.Queries.GetTodayStats
         Guid CustomerId,
         DateTime StartUtc,
         DateTime EndUtc,
-        string Notes
+        string Notes,
+        string CustomerName
     );
 }
 

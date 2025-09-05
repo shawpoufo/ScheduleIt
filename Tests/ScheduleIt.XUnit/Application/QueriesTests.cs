@@ -24,6 +24,7 @@ namespace ScheduleIt.XUnit.Application
         {
             // arrange
             var repo = new Mock<IAppointmentRepository>();
+            var customerRepo = new Mock<ICustomerRepository>();
             var today = DateTime.UtcNow.Date;
             repo.Setup(r => r.CountAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(10);
             repo.Setup(r => r.CountTodayAsync(today, It.IsAny<CancellationToken>())).ReturnsAsync(3);
@@ -35,8 +36,12 @@ namespace ScheduleIt.XUnit.Application
             };
             repo.Setup(r => r.GetUpcomingTodayAsync(today, 5, It.IsAny<CancellationToken>())).ReturnsAsync(upcoming);
 
+            customerRepo
+                .Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) => ids.Select(id => new Customer(id, "Test Customer", "test@example.com")).ToList());
+
             // act
-            var handler = new GetTodayStatsQueryHandler(repo.Object);
+            var handler = new GetTodayStatsQueryHandler(repo.Object, customerRepo.Object);
             var result = await handler.Handle(new GetTodayStatsQuery(today), CancellationToken.None);
 
             // assert
