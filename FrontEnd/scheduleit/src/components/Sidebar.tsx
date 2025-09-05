@@ -8,7 +8,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ className = "" }) => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: 'dashboard' },
-    { path: '/appointments', label: 'Appointments', icon: 'appointments' },
+    { path: '/calendar', label: 'Calendar', icon: 'calendar' },
+    { path: '/customers', label: 'Customers', icon: 'customers' },
     { path: '/settings', label: 'Settings', icon: 'settings' }
   ];
 
@@ -24,12 +25,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className = "" }) => {
         return (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"></path>
-          </svg>
-        );
-      case 'appointments':
-        return (
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"></path>
           </svg>
         );
       case 'customers':

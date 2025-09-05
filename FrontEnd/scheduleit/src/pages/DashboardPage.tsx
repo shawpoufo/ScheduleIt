@@ -1,122 +1,79 @@
-import React, { useState } from 'react';
-import StatusBadge from '../components/StatusBadge';
+import React from 'react';
+import { API_BASE_URL } from '../config/api';
+import { format } from 'date-fns';
 
-interface Appointment {
-  id: string;
-  customerName: string;
-  service: string;
-  date: string;
-  status: 'Booked' | 'Canceled' | 'Completed';
-}
+type TodayUpcoming = { appointmentId: string; customerId: string; startUtc: string; endUtc: string };
+type TodayStats = { totalAppointments: number; todayAppointments: number; upcomingToday: TodayUpcoming[] };
 
 const DashboardPage: React.FC = () => {
-  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
-  
-  const totalAppointments = 245;
-  const activeCustomers = 120;
-  const upcomingAppointments = 15;
-  
-  const recentAppointments: Appointment[] = [
-    {
-      id: '1',
-      customerName: 'Sophia Clark',
-      service: 'Haircut',
-      date: '2024-07-20 10:00 AM',
-      status: 'Booked'
-    },
-    {
-      id: '2',
-      customerName: 'Ethan Carter',
-      service: 'Massage',
-      date: '2024-07-21 02:00 PM',
-      status: 'Booked'
-    },
-    {
-      id: '3',
-      customerName: 'Olivia Bennett',
-      service: 'Facial',
-      date: '2024-07-22 11:00 AM',
-      status: 'Canceled'
-    },
-    {
-      id: '4',
-      customerName: 'Liam Foster',
-      service: 'Manicure',
-      date: '2024-07-23 09:00 AM',
-      status: 'Booked'
-    },
-    {
-      id: '5',
-      customerName: 'Ava Reynolds',
-      service: 'Haircut',
-      date: '2024-07-24 03:00 PM',
-      status: 'Booked'
-    }
-  ];
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [stats, setStats] = React.useState<TodayStats | null>(null);
 
-  // badge handled by StatusBadge component
+  React.useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/appointments/stats/today`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error || 'Failed to load dashboard stats');
+        }
+        const data: TodayStats = await res.json();
+        setStats(data);
+      } catch (e: any) {
+        setError(e?.message || 'Failed to load dashboard stats');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-      {lastCreatedId && (
-        <div className="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">
-          Appointment created successfully. ID: {lastCreatedId}
-        </div>
+      {error && (
+        <div className="mb-4 rounded-md bg-rose-50 border border-rose-200 px-4 py-2 text-sm text-rose-700">{error}</div>
       )}
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
-      {/* Overview Section */}
       <h2 className="text-xl font-semibold mb-4">Overview</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
           <p className="text-sm font-medium text-gray-600">Total Appointments</p>
-          <p className="text-3xl font-bold mt-1">{totalAppointments}</p>
+          <p className="text-3xl font-bold mt-1">{stats ? stats.totalAppointments : '—'}</p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <p className="text-sm font-medium text-gray-600">Active Customers</p>
-          <p className="text-3xl font-bold mt-1">{activeCustomers}</p>
+          <p className="text-sm font-medium text-gray-600">Appointments Today</p>
+          <p className="text-3xl font-bold mt-1">{stats ? stats.todayAppointments : '—'}</p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
-          <p className="text-3xl font-bold mt-1">{upcomingAppointments}</p>
+          <p className="text-sm font-medium text-gray-600">Upcoming Today</p>
+          <p className="text-3xl font-bold mt-1">{stats ? stats.upcomingToday.length : '—'}</p>
         </div>
       </div>
 
-      {/* Recent Activity Section */}
-      <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+      <h2 className="text-xl font-semibold mb-4">Upcoming Today</h2>
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">
-                Customer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">
-                Service
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">
-                Status
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">Start</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">End</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider" scope="col">Customer</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {recentAppointments.map((appointment) => (
-              <tr key={appointment.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {appointment.customerName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {appointment.service}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {appointment.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <StatusBadge status={appointment.status as any} />
-                </td>
+            {isLoading && (<tr><td className="px-6 py-4 text-sm text-gray-500" colSpan={3}>Loading…</td></tr>)}
+            {!isLoading && stats && stats.upcomingToday.length === 0 && (
+              <tr><td className="px-6 py-4 text-sm text-gray-500" colSpan={3}>No upcoming appointments today</td></tr>
+            )}
+            {!isLoading && stats && stats.upcomingToday.map(u => (
+              <tr key={u.appointmentId} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{format(new Date(u.startUtc), 'PPpp')}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{format(new Date(u.endUtc), 'PPpp')}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.customerId}</td>
               </tr>
             ))}
           </tbody>
