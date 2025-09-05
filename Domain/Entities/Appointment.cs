@@ -88,6 +88,15 @@ namespace Domain.Entities
             Status = AppointmentStatus.NoShow;
         }
 
+        public void MarkAsScheduled()
+        {
+            // Idempotent if already scheduled; otherwise disallow reverting
+            if (Status == AppointmentStatus.Scheduled)
+                return;
+
+            throw new DomainRuleViolationException("Cannot revert an appointment back to Scheduled.");
+        }
+
         public bool IsOverlapping(DateTime startTime, DateTime endTime)
         {
             return Status != AppointmentStatus.Canceled && TimeSlot.IsOverlapping(startTime, endTime);
