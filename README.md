@@ -124,16 +124,6 @@ Open the frontend calendar to visualize, book, edit, and delete appointments.
 - Missing aggregates throw `NotFoundException` (404).
 - Unexpected errors return 500 with a generic message.
 
-Example mapper snippet:
-```csharp
-return ex switch
-{
-    NotFoundException nf => new NotFoundObjectResult(new { error = nf.Message }),
-    DomainRuleViolationException drv => new BadRequestObjectResult(new { error = drv.Message }),
-    ValidationException v => new BadRequestObjectResult(new { error = v.Message }),
-    _ => new ObjectResult(new { error = "An unexpected error occurred." }) { StatusCode = 500 }
-};
-```
 
 ## Testing
 - Project: `BackEnd/Tests/ScheduleIt.XUnit`
