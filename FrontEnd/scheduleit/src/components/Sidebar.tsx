@@ -5,13 +5,19 @@ interface SidebarProps {
   className?: string;
 }
 
+interface NavItem {
+  path: string;
+  label: string;
+  icon: 'dashboard' | 'calendar';
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ className = "" }) => {
-  const navItems = [
+  const navItems: NavItem[] = [
     { path: '/', label: 'Dashboard', icon: 'dashboard' },
     { path: '/calendar', label: 'Calendar', icon: 'calendar' }
   ];
 
-  const getIcon = (iconName: string) => {
+  const getIcon = (iconName: NavItem['icon']): React.ReactNode => {
     switch (iconName) {
       case 'dashboard':
         return (

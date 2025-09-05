@@ -1,9 +1,8 @@
 import React from 'react';
 import { API_BASE_URL } from '../config/api';
 import { format } from 'date-fns';
-
-type TodayUpcoming = { appointmentId: string; customerId: string; startUtc: string; endUtc: string; customerName: string };
-type TodayStats = { totalAppointments: number; todayAppointments: number; upcomingToday: TodayUpcoming[] };
+import type { TodayStats } from '../types';
+import { fetchJson } from '../services/http';
 
 const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -15,12 +14,7 @@ const DashboardPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/appointments/stats/today`);
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data?.error || 'Failed to load dashboard stats');
-        }
-        const data: TodayStats = await res.json();
+        const data = await fetchJson<TodayStats>(`${API_BASE_URL}/api/appointments/stats/today`);
         setStats(data);
       } catch (e: any) {
         setError(e?.message || 'Failed to load dashboard stats');

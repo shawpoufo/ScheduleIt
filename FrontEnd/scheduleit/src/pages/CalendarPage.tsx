@@ -5,17 +5,11 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { format, parse, startOfWeek, getDay, addMinutes, startOfMonth, endOfMonth, endOfWeek, startOfDay, endOfDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { API_BASE_URL } from '../config/api';
+import type { AppointmentStatus, AppointmentEvent } from '../types/appointments';
+import CustomerSearchInput from '../components/CustomerSearchInput';
+import customerService from '../services/customerService';
 
-type AppointmentStatus = 'Scheduled' | 'Canceled' | 'Completed' | 'InProgress' | 'NoShow';
-
-interface AppointmentEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  status: AppointmentStatus;
-  notes?: string;
-}
+// AppointmentStatus and AppointmentEvent imported from shared types
 
 const locales = {
   'en-US': enUS,
@@ -110,10 +104,8 @@ const CalendarPage: React.FC = () => {
   const [createStart, setCreateStart] = useState<Date | null>(null);
   const [createEnd, setCreateEnd] = useState<Date | null>(null);
   const [createNotes, setCreateNotes] = useState<string>('');
-  const [customerQuery, setCustomerQuery] = useState<string>('');
-  const [customerResults, setCustomerResults] = useState<Array<{ id: string; name: string; email: string }>>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; email: string } | null>(null);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [customerQuery, setCustomerQuery] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
@@ -124,28 +116,7 @@ const CalendarPage: React.FC = () => {
   const [isCreatingCustomer, setIsCreatingCustomer] = useState<boolean>(false);
   const [customerCreationError, setCustomerCreationError] = useState<string | null>(null);
 
-  // Autocomplete search (debounced)
-  React.useEffect(() => {
-    const term = customerQuery.trim();
-    if (term.length < 2) {
-      setCustomerResults([]);
-      return;
-    }
-    const t = setTimeout(async () => {
-      try {
-        setIsSearching(true);
-        const res = await fetch(`${API_BASE_URL}/api/customers?search=${encodeURIComponent(term)}`);
-        if (!res.ok) throw new Error('Search failed');
-        const list = await res.json();
-        setCustomerResults(Array.isArray(list) ? list : []);
-      } catch (e) {
-        setCustomerResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [customerQuery]);
+  // Customer search handled by CustomerSearchInput
 
   // Create new customer function
   const createNewCustomer = async () => {
@@ -184,8 +155,6 @@ const CalendarPage: React.FC = () => {
       setShowCreateCustomer(false);
       setNewCustomerName('');
       setNewCustomerEmail('');
-      setCustomerQuery(newCustomer.name);
-      setCustomerResults([newCustomer]); // Add the new customer to results so the "No customers found" section disappears
     } catch (e: any) {
       setCustomerCreationError(e?.message || 'Failed to create customer');
     } finally {
@@ -295,8 +264,6 @@ const CalendarPage: React.FC = () => {
                   setCreateStart(slot.start);
                   setCreateEnd(slot.end ?? addMinutes(slot.start, 30));
                   setSelectedCustomer(null);
-                  setCustomerQuery('');
-                  setCustomerResults([]);
                   setSubmitError(null);
                   setShowCreateCustomer(false);
                   setNewCustomerName('');
@@ -560,53 +527,21 @@ const CalendarPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
-                <input
-                  type="text"
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                  placeholder="Search by name or email"
-                  value={customerQuery}
-                  onChange={(e) => {
-                    setCustomerQuery(e.target.value);
-                    setSelectedCustomer(null);
+                <CustomerSearchInput
+                  value={selectedCustomer}
+                  onChange={setSelectedCustomer}
+                  onSearch={(query) => customerService.searchCustomers(query)}
+                  onQueryChange={setCustomerQuery}
+                  onCreateRequested={(query) => {
+                    setShowCreateCustomer(true);
+                    setNewCustomerName(query.trim());
+                    setCustomerCreationError(null);
                   }}
+                  placeholder="Search by name or email"
+                  className="mt-1"
+                  required
                 />
-                <div className="mt-2 max-h-44 overflow-auto rounded-md border border-gray-200">
-                  {isSearching && (
-                    <div className="p-2 text-sm text-gray-500">Searching…</div>
-                  )}
-                  {!isSearching && customerQuery.trim().length >= 2 && customerResults.length === 0 && !showCreateCustomer && (
-                    <div className="p-2">
-                      <div className="text-sm text-gray-500 mb-2">No customers found</div>
-                      <button
-                        type="button"
-                        className="w-full px-3 py-2 text-left text-sm text-[var(--primary-color)] hover:bg-[var(--accent-color)] border border-[var(--primary-color)] rounded-md"
-                        onClick={() => {
-                          setShowCreateCustomer(true);
-                          setNewCustomerName(customerQuery);
-                          setCustomerCreationError(null);
-                        }}
-                      >
-                        + Create new customer: "{customerQuery}"
-                      </button>
-                    </div>
-                  )}
-                  {!isSearching && customerResults.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${selectedCustomer?.id === c.id ? 'bg-[var(--accent-color)]' : ''}`}
-                      onClick={() => setSelectedCustomer(c)}
-                    >
-                      <div className="font-medium text-gray-900">{c.name}</div>
-                      <div className="text-xs text-gray-500">{c.email}</div>
-                    </button>
-                  ))}
-                </div>
-                {selectedCustomer && (
-                  <div className="mt-2 inline-flex items-center rounded-md border border-[var(--primary-color)] bg-[var(--accent-color)] px-2 py-1 text-xs font-medium text-[var(--primary-color)]">
-                    Selected: {selectedCustomer.name}
-                  </div>
-                )}
+                
 
                 {showCreateCustomer && (
                   <div className="mt-3 p-3 border border-gray-200 rounded-md bg-gray-50">
@@ -734,8 +669,6 @@ const CalendarPage: React.FC = () => {
                       ]);
                       setCreateOpen(false);
                       setSelectedCustomer(null);
-                      setCustomerQuery('');
-                      setCustomerResults([]);
                       setShowCreateCustomer(false);
                       setNewCustomerName('');
                       setNewCustomerEmail('');

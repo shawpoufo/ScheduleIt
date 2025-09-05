@@ -1,21 +1,19 @@
 import React from 'react';
-
-type StatusKind = 'Booked' | 'Canceled' | 'Completed' | 'Scheduled' | 'InProgress' | 'NoShow';
+import type { AppointmentStatus } from '../types/appointments';
 
 interface StatusBadgeProps {
-  status: StatusKind;
+  status: AppointmentStatus;
   className?: string;
 }
 
 const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
-const statusClassMap: Record<StatusKind, string> = {
-  Booked: `${baseClasses} bg-green-100 text-green-600`,
-  Canceled: `${baseClasses} bg-red-100 text-red-600`,
+const statusClassMap: Record<AppointmentStatus, string> = {
+  Scheduled: `${baseClasses} text-[var(--primary-color)] border border-[var(--primary-color)] bg-[var(--accent-color)]`,
+  InProgress: `${baseClasses} text-white border border-[var(--primary-color)] bg-[var(--primary-color)]`,
   Completed: `${baseClasses} bg-blue-100 text-blue-600`,
-  Scheduled: 'inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium text-[var(--primary-color)] border-[var(--primary-color)] bg-[var(--accent-color)]',
-  InProgress: 'inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium text-white border-[var(--primary-color)] bg-[var(--primary-color)]',
-  NoShow: 'inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium text-gray-700 border-gray-400 bg-gray-200',
+  Canceled: `${baseClasses} bg-red-100 text-red-600`,
+  NoShow: `${baseClasses} text-gray-700 border border-gray-400 bg-gray-200`,
 };
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {

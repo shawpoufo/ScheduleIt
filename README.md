@@ -11,7 +11,7 @@ Clean, production-lean scheduling app demonstrating .NET 9 Clean Architecture wi
 - **Clean Architecture**: `Domain`, `Application`, `Infrastructure`, `Api`, `App` (host), `FrontEnd`
 - **DDD**: Rich `Appointment` aggregate with invariants and a dedicated `DomainRuleViolationException`
 - **CQRS with MediatR**: Commands/Queries for appointments and customers
-- **Validation**: FluentValidation on command layer + value object guards in domain
+- **Validation**: FluentValidation on command layer (executed via MediatR pipeline behavior) + value object guards in domain
 - **Domain events**: `AppointmentBooked`, `AppointmentCanceled` published via EF Core + MediatR
 - **EF Core**: SQL Server provider, code-first migrations, repository + unit-of-work
 - **API**: Swagger/OpenAPI with XML comments, typed error mapping via `ProblemDetailsMapper`
@@ -53,7 +53,7 @@ docker-compose.yml           # API + Frontend + SQL Server services
   - SQL Server provider; repositories implement `ICustomerRepository` and `IAppointmentRepository` with `UnitOfWork`.
   - Migrations generated and tracked; `BackEnd/db-scripts/migrations.sql` helps bootstrap in Docker.
 - **API**
-  - Controllers are small and delegate to MediatR. Errors are mapped centrally by `ProblemDetailsMapper`:
+  - Controllers are small and delegate to MediatR. Errors are mapped centrally by `ProblemDetailsMapper` via global middleware:
     - `NotFoundException` → 404
     - `DomainRuleViolationException`, `ValidationException` → 400
     - others → 500

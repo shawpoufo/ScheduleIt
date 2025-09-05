@@ -1,16 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { useCombobox } from 'downshift';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-}
+import type { Customer } from '../types';
 
 interface CustomerSearchInputProps {
   value: Customer | null;
   onChange: (customer: Customer | null) => void;
   onSearch: (query: string) => Promise<Customer[]>;
+  onQueryChange?: (query: string) => void;
+  onCreateRequested?: (query: string) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
@@ -21,6 +18,8 @@ const CustomerSearchInput: React.FC<CustomerSearchInputProps> = ({
   value,
   onChange,
   onSearch,
+  onQueryChange,
+  onCreateRequested,
   placeholder = "Search customers...",
   className = "",
   required = false,
@@ -59,6 +58,7 @@ const CustomerSearchInput: React.FC<CustomerSearchInputProps> = ({
     selectItem,
     inputValue,
     setInputValue,
+    closeMenu,
   } = useCombobox({
     items: customers,
     selectedItem: value,
@@ -67,6 +67,7 @@ const CustomerSearchInput: React.FC<CustomerSearchInputProps> = ({
     },
     onInputValueChange: ({ inputValue = "" }) => {
       handleInputValueChange(inputValue);
+      onQueryChange?.(inputValue);
     },
     itemToString: (item) => item?.name || '',
     getA11yStatusMessage: ({ isOpen }) => {
@@ -164,9 +165,29 @@ const CustomerSearchInput: React.FC<CustomerSearchInputProps> = ({
         ))}
         
         {isOpen && customers.length === 0 && inputValue.length >= 2 && !isLoading && (
-          <li className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-500">
-            No customers found for "{inputValue}"
-          </li>
+          <>
+            <li className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-500">
+              No customers found for "{inputValue}"
+            </li>
+            {onCreateRequested && (
+              <li className="relative select-none py-2 pl-3 pr-9">
+                <button
+                  type="button"
+                  className="w-full text-left text-sm text-[var(--primary-color)] hover:bg-[var(--accent-color)] border border-[var(--primary-color)] rounded-md px-2 py-1"
+                  onClick={() => {
+                    onCreateRequested(inputValue);
+                    selectItem(null);
+                    setInputValue('');
+                    setCustomers([]);
+                    closeMenu();
+                  }}
+                  disabled={disabled}
+                >
+                  + Create new customer: "{inputValue}"
+                </button>
+              </li>
+            )}
+          </>
         )}
       </ul>
     </div>
