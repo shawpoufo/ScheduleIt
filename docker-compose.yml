@@ -2,13 +2,14 @@ services:
   app:
     image: ${DOCKER_REGISTRY-}app
     build:
-      context: .
+      context: ./BackEnd
       dockerfile: App/Dockerfile
     depends_on:
       - sqlserver
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__Database=Server=sqlserver;Database=ScheduleIt;User Id=sa;Password=MyP@ssw0rd123;TrustServerCertificate=true;MultipleActiveResultSets=true
     ports:
       - "8080:8080"
   frontend:
@@ -47,7 +48,7 @@ services:
       sqlserver:
         condition: service_healthy
     volumes:
-      - ./db-scripts:/scripts:ro
+      - ./BackEnd/db-scripts:/scripts:ro
     entrypoint: ["/bin/bash", "-c"]
     command:
       - >
