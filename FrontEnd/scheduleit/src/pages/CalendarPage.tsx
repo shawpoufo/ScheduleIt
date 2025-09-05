@@ -34,6 +34,7 @@ const CalendarPage: React.FC = () => {
   const [selected, setSelected] = useState<AppointmentEvent | null>(null);
   const [statusSaving, setStatusSaving] = useState<boolean>(false);
   const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const statusOptions: AppointmentStatus[] = ['Scheduled','InProgress','Completed','Canceled','NoShow'];
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState<Date>(new Date());
@@ -98,6 +99,7 @@ const CalendarPage: React.FC = () => {
 
   React.useEffect(() => {
     setPendingStatus(selected?.status ?? null);
+    setStatusError(null);
   }, [selected]);
 
   // Create appointment modal state
@@ -403,6 +405,9 @@ const CalendarPage: React.FC = () => {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+                  {statusError && (
+                    <div className="mt-2 text-xs text-[var(--danger-color)]">{statusError}</div>
+                  )}
                 </div>
                 <button
                   className="inline-flex w-full items-center justify-center rounded-md bg-[var(--primary-color)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -410,20 +415,23 @@ const CalendarPage: React.FC = () => {
                   onClick={async () => {
                     if (!selected || !pendingStatus || pendingStatus === selected.status) return;
                     setStatusSaving(true);
+                    setStatusError(null);
                     try {
                       const r = await fetch(`${API_BASE_URL}/api/appointments/${selected.id}/status`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ appointmentId: selected.id, status: pendingStatus }),
                       });
+                      const data = await r.json().catch(() => ({} as any));
                       if (!r.ok) {
-                        const err = await r.json().catch(() => ({}));
-                        throw new Error(err?.error || 'Failed to update status');
+                        const msg = (data && (data.error || data.title)) || 'Failed to update status';
+                        throw new Error(msg);
                       }
-                      setEvents((prev) => prev.map(ev => ev.id === selected.id ? { ...ev, status: pendingStatus } : ev));
+                      const newStatus = (data?.status as AppointmentStatus) || pendingStatus;
+                      setEvents((prev) => prev.map(ev => ev.id === selected.id ? { ...ev, status: newStatus } : ev));
                       setSelected(null);
-                    } catch (err) {
-                      // optional: surface error
+                    } catch (err: any) {
+                      setStatusError(err?.message || 'Unable to update status');
                     } finally {
                       setStatusSaving(false);
                     }
