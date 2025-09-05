@@ -49,29 +49,12 @@ namespace Api.Controllers
             try
             {
                 var appointmentId = await _mediator.Send(command, cancellationToken);
-                return CreatedAtAction(nameof(GetAppointment), new { id = appointmentId }, new { id = appointmentId });
+                return Created($"/api/appointments/{appointmentId}", new { id = appointmentId });
             }
             catch (Exception ex)
             {
                 return ProblemDetailsMapper.Map(ex);
             }
-        }
-
-
-        /// <summary>
-        /// Retrieves a specific appointment by ID
-        /// </summary>
-        /// <param name="id">The appointment ID</param>
-        /// <returns>The appointment details</returns>
-        /// <response code="200">Appointment found and returned</response>
-        /// <response code="404">Appointment not found</response>
-        [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAppointment([Required] Guid id)
-        {
-            // TODO: Implement GetAppointment query handler
-            return Ok(new { message = "GetAppointment not implemented yet" });
         }
 
 

@@ -12,7 +12,7 @@ namespace Domain.Entities
         public string Name { get; private set; } = string.Empty;
         public string Email { get; private set; } = string.Empty;
 
-        private Customer():base(Guid.NewGuid()) { } // For EF Core
+        private Customer():base(Guid.NewGuid()) { } 
 
         public Customer(Guid id, string name, string email) : base(id)
         {

@@ -13,7 +13,6 @@ namespace Domain.Entities
         public AppointmentStatus Status { get; private set; }
         public string Notes { get; private set; } = string.Empty;
 
-        // Parameterless constructor for EF Core
         private Appointment() : base(Guid.NewGuid())
         {
             Status = AppointmentStatus.Scheduled;
