@@ -7,6 +7,9 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using Application.Appointments.Queries.GetAppointmentsInRange;
+using Application.Appointments.Commands.UpdateAppointmentStatus;
+using Application.Appointments.Queries.GetTodayStats;
 
 namespace Api.Controllers
 {
@@ -29,7 +32,7 @@ namespace Api.Controllers
         /// <summary>
         /// Books a new appointment for a customer
         /// </summary>
-        /// <param name="command">The appointment booking details</param>
+        /// <param name="command">The appointment booking details (CustomerId, StartUtc, EndUtc, Notes)</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The created appointment ID</returns>
         /// <response code="201">Appointment successfully booked</response>
@@ -48,13 +51,9 @@ namespace Api.Controllers
                 var appointmentId = await _mediator.Send(command, cancellationToken);
                 return CreatedAtAction(nameof(GetAppointment), new { id = appointmentId }, new { id = appointmentId });
             }
-            catch (Application.Common.ValidationException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Application.Common.NotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
+                return ProblemDetailsMapper.Map(ex);
             }
         }
 
@@ -81,13 +80,9 @@ namespace Api.Controllers
                 await _mediator.Send(command, cancellationToken);
                 return NoContent();
             }
-            catch (Application.Common.ValidationException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Application.Common.NotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
+                return ProblemDetailsMapper.Map(ex);
             }
         }
 
@@ -107,44 +102,87 @@ namespace Api.Controllers
             return Ok(new { message = "GetAppointment not implemented yet" });
         }
 
+
         /// <summary>
-        /// Retrieves upcoming appointments from a specified date
+        /// Retrieves dashboard stats for today: total count, today's count, and 5 upcoming today
         /// </summary>
-        /// <param name="fromUtc">Start date for upcoming appointments (UTC)</param>
+        [HttpGet("stats/today")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTodayStats([FromQuery] DateTime? nowUtc, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var now = nowUtc ?? DateTime.UtcNow;
+                var query = new GetTodayStatsQuery(now);
+                var dto = await _mediator.Send(query, cancellationToken);
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                return ProblemDetailsMapper.Map(ex);
+            }
+        }
+
+
+        /// <summary>
+        /// Retrieves appointments overlapping a date-time range (any status)
+        /// </summary>
+        /// <param name="startUtc">Range start (UTC)</param>
+        /// <param name="endUtc">Range end (UTC)</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>List of upcoming appointments</returns>
-        /// <response code="200">Upcoming appointments retrieved successfully</response>
-        /// <response code="400">Invalid date parameter</response>
-        [HttpGet("upcoming")]
+        /// <returns>List of appointments in the range</returns>
+        /// <response code="200">Appointments retrieved successfully</response>
+        /// <response code="400">Invalid date parameters</response>
+        [HttpGet("range")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetUpcomingAppointments(
-            [FromQuery, Required] DateTime fromUtc,
+        public async Task<IActionResult> GetAppointmentsInRange(
+            [FromQuery, Required] DateTime startUtc,
+            [FromQuery, Required] DateTime endUtc,
             CancellationToken cancellationToken)
         {
-            // TODO: Implement GetUpcomingAppointments query handler
-            return Ok(new { message = "GetUpcomingAppointments not implemented yet" });
+            if (startUtc == default || endUtc == default)
+                return BadRequest(new { error = "startUtc and endUtc are required" });
+            if (startUtc >= endUtc)
+                return BadRequest(new { error = "startUtc must be before endUtc" });
+
+            var query = new GetAppointmentsInRangeQuery(startUtc, endUtc);
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Retrieves all appointments for a specific customer
+        /// Updates the status of an appointment
         /// </summary>
-        /// <param name="customerId">The customer ID</param>
+        /// <param name="id">Appointment ID</param>
+        /// <param name="command">New status</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>List of customer appointments</returns>
-        /// <response code="200">Customer appointments retrieved successfully</response>
-        /// <response code="400">Invalid customer ID</response>
-        /// <response code="404">Customer not found</response>
-        [HttpGet("customer/{customerId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        /// <response code="204">Status updated</response>
+        /// <response code="400">Invalid status or transition</response>
+        /// <response code="404">Appointment not found</response>
+        [HttpPatch("{id}/status")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetCustomerAppointments(
-            [Required] Guid customerId,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateStatus([Required] Guid id, [FromBody] UpdateAppointmentStatusCommand command, CancellationToken cancellationToken)
         {
-            // TODO: Implement GetCustomerAppointments query handler
-            return Ok(new { message = "GetCustomerAppointments not implemented yet" });
+            if (command.AppointmentId == Guid.Empty)
+            {
+                command = command with { AppointmentId = id };
+            }
+
+            if (command.AppointmentId != id)
+                return BadRequest(new { error = "AppointmentId mismatch" });
+
+            try
+            {
+                await _mediator.Send(command, cancellationToken);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return ProblemDetailsMapper.Map(ex);
+            }
         }
     }
 }

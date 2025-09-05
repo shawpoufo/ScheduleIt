@@ -4,8 +4,6 @@ namespace Domain.ValueObjects
 {
     public sealed record AppointmentTimeSlot
     {
-        private const int DurationMinutes = 30;
-        
         public DateTime StartUtc { get; }
         public DateTime EndUtc { get; }
 
@@ -15,23 +13,28 @@ namespace Domain.ValueObjects
             EndUtc = endUtc;
         }
 
-        public static AppointmentTimeSlot Create(DateTime startUtc, DateTime now)
+        public static AppointmentTimeSlot Create(DateTime startUtc, DateTime endUtc, DateTime now)
         {
             if (startUtc <= now)
-                throw new ArgumentException("Appointment cannot be scheduled in the past.", nameof(startUtc));
+                throw new ArgumentException("Appointment cannot be scheduled in the past.");
 
-            var endUtc = startUtc.AddMinutes(DurationMinutes);
+            if (startUtc >= endUtc)
+                throw new ArgumentException("Start time must be before end time.");
+
+            // Reasonable duration guardrails (e.g., > 30 minutes and < 12 hours)
+            var duration = endUtc - startUtc;
+            if (duration.TotalMinutes < 30)
+                throw new ArgumentException("Appointment duration must be at least 30 minutes.");
+            if (duration.TotalHours > 12)
+                throw new ArgumentException("Appointment duration cannot exceed 12 hours.");
+
             return new AppointmentTimeSlot(startUtc, endUtc);
         }
 
         public static AppointmentTimeSlot CreateFromStartAndEnd(DateTime startUtc, DateTime endUtc)
         {
             if (startUtc >= endUtc)
-                throw new ArgumentException("Start time must be before end time.", nameof(startUtc));
-
-            var duration = endUtc - startUtc;
-            if (duration.TotalMinutes != DurationMinutes)
-                throw new ArgumentException($"Appointment duration must be exactly {DurationMinutes} minutes.", nameof(endUtc));
+                throw new ArgumentException("Start time must be before end time.");
 
             return new AppointmentTimeSlot(startUtc, endUtc);
         }

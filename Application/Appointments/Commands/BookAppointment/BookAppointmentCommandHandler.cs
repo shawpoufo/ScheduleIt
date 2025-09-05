@@ -35,17 +35,16 @@ namespace Application.Appointments.Commands.BookAppointment
                 throw new NotFoundException($"Customer with ID '{request.CustomerId}' not found.");
             }
 
-            // Check for overlapping appointments (30-minute slots)
-            var endTime = request.StartUtc.AddMinutes(30);
-            var hasOverlap = await _appointmentRepository.HasOverlappingAppointmentsAsync(request.StartUtc, endTime, cancellationToken);
-
+            // Check for overlapping appointments using supplied end time
+                var hasOverlap = await _appointmentRepository.HasOverlappingAppointmentsAsync(request.StartUtc, request.EndUtc, cancellationToken);
+            
             if (hasOverlap)
             {
                 throw new ValidationException("This time slot overlaps with an existing appointment.");
             }
 
             // Create appointment with domain invariants (domain will validate business rules)
-            var appointment = Appointment.Create(request.CustomerId, request.StartUtc, now);
+            var appointment = Appointment.Create(request.CustomerId, request.StartUtc, request.EndUtc, now, request.Notes);
 
             _appointmentRepository.Add(appointment);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

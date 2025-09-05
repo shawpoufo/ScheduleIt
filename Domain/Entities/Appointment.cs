@@ -11,6 +11,7 @@ namespace Domain.Entities
         public Guid CustomerId { get; private set; }
         public AppointmentTimeSlot TimeSlot { get; private set; }
         public AppointmentStatus Status { get; private set; }
+        public string Notes { get; private set; } = string.Empty;
 
         // Parameterless constructor for EF Core
         private Appointment() : base(Guid.NewGuid())
@@ -18,18 +19,19 @@ namespace Domain.Entities
             Status = AppointmentStatus.Scheduled;
         }
 
-        private Appointment(Guid customerId, AppointmentTimeSlot timeSlot) : base(Guid.NewGuid())
+        private Appointment(Guid customerId, AppointmentTimeSlot timeSlot, string notes) : base(Guid.NewGuid())
         {
             CustomerId = customerId;
             TimeSlot = timeSlot;
             Status = AppointmentStatus.Scheduled;
+            Notes = notes ?? string.Empty;
         }
 
-        public static Appointment Create(Guid customerId, DateTime startUtc, DateTime now)
+        public static Appointment Create(Guid customerId, DateTime startUtc, DateTime endUtc, DateTime now, string? notes = null)
         {
-            var timeSlot = AppointmentTimeSlot.Create(startUtc, now);
+            var timeSlot = AppointmentTimeSlot.Create(startUtc, endUtc, now);
 
-            var appointment = new Appointment(customerId, timeSlot);
+            var appointment = new Appointment(customerId, timeSlot, notes ?? string.Empty);
             appointment.AddEvent(new AppointmentBooked(customerId, timeSlot));
             return appointment;
         }
@@ -37,11 +39,11 @@ namespace Domain.Entities
         public void Cancel(DateTime now)
         {
             if (Status == AppointmentStatus.Canceled)
-                throw new InvalidOperationException("Appointment is already canceled.");
+                throw new DomainRuleViolationException("Appointment is already canceled.");
 
             // Domain invariant: Prevent cancel after start
             if (TimeSlot.StartUtc <= now)
-                throw new InvalidOperationException("Cannot cancel an appointment that has already started or finished.");
+                throw new DomainRuleViolationException("Cannot cancel an appointment that has already started or finished.");
 
             Status = AppointmentStatus.Canceled;
             AddEvent(new AppointmentCanceled(Id));
@@ -50,10 +52,10 @@ namespace Domain.Entities
         public void MarkAsCompleted()
         {
             if (Status == AppointmentStatus.Canceled)
-                throw new InvalidOperationException("Cannot mark a canceled appointment as completed.");
+                throw new DomainRuleViolationException("Cannot mark a canceled appointment as completed.");
 
             if (Status == AppointmentStatus.Completed)
-                throw new InvalidOperationException("Appointment is already marked as completed.");
+                throw new DomainRuleViolationException("Appointment is already marked as completed.");
 
             Status = AppointmentStatus.Completed;
         }
@@ -61,13 +63,13 @@ namespace Domain.Entities
         public void MarkAsInProgress()
         {
             if (Status == AppointmentStatus.Canceled)
-                throw new InvalidOperationException("Cannot mark a canceled appointment as in progress.");
+                throw new DomainRuleViolationException("Cannot mark a canceled appointment as in progress.");
 
             if (Status == AppointmentStatus.Completed)
-                throw new InvalidOperationException("Cannot mark a completed appointment as in progress.");
+                throw new DomainRuleViolationException("Cannot mark a completed appointment as in progress.");
 
             if (Status == AppointmentStatus.InProgress)
-                throw new InvalidOperationException("Appointment is already in progress.");
+                throw new DomainRuleViolationException("Appointment is already in progress.");
 
             Status = AppointmentStatus.InProgress;
         }
@@ -75,13 +77,13 @@ namespace Domain.Entities
         public void MarkAsNoShow()
         {
             if (Status == AppointmentStatus.Canceled)
-                throw new InvalidOperationException("Cannot mark a canceled appointment as no-show.");
+                throw new DomainRuleViolationException("Cannot mark a canceled appointment as no-show.");
 
             if (Status == AppointmentStatus.Completed)
-                throw new InvalidOperationException("Cannot mark a completed appointment as no-show.");
+                throw new DomainRuleViolationException("Cannot mark a completed appointment as no-show.");
 
             if (Status == AppointmentStatus.NoShow)
-                throw new InvalidOperationException("Appointment is already marked as no-show.");
+                throw new DomainRuleViolationException("Appointment is already marked as no-show.");
 
             Status = AppointmentStatus.NoShow;
         }

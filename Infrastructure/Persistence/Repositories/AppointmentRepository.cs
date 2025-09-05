@@ -29,6 +29,39 @@ namespace Infrastructure.Persistence.Repositories
         {
             _context.Appointments.Add(appointment);
         }
+
+        public async Task<List<Appointment>> GetInRangeAsync(DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+        {
+            return await _context.Appointments
+                .Where(a => a.TimeSlot.StartUtc < endUtc && a.TimeSlot.EndUtc > startUtc)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<int> CountAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Appointments.CountAsync(cancellationToken);
+        }
+
+        public async Task<int> CountTodayAsync(DateTime todayUtc, CancellationToken cancellationToken = default)
+        {
+            var startOfDay = todayUtc.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            
+            return await _context.Appointments
+                .CountAsync(a => a.TimeSlot.StartUtc >= startOfDay && a.TimeSlot.StartUtc < endOfDay, cancellationToken);
+        }
+
+        public async Task<List<Appointment>> GetUpcomingTodayAsync(DateTime nowUtc, int limit, CancellationToken cancellationToken = default)
+        {
+            var startOfDay = nowUtc.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            
+            return await _context.Appointments
+                .Where(a => a.TimeSlot.StartUtc >= nowUtc && a.TimeSlot.StartUtc >= startOfDay && a.TimeSlot.StartUtc < endOfDay)
+                .OrderBy(a => a.TimeSlot.StartUtc)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

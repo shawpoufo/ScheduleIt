@@ -24,6 +24,11 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.Status)
                 .HasConversion<string>()
                 .IsRequired();
+
+            // Configure Notes property
+            builder.Property(x => x.Notes)
+                .HasMaxLength(1000)
+                .IsRequired(false);
         }
     }
 }
