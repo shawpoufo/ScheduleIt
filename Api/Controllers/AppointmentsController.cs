@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Appointments.Commands.BookAppointment;
-using Application.Appointments.Commands.CancelAppointment;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -57,34 +56,6 @@ namespace Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Cancels an existing appointment
-        /// </summary>
-        /// <param name="id">The appointment ID to cancel</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>No content on successful cancellation</returns>
-        /// <response code="204">Appointment successfully canceled</response>
-        /// <response code="400">Invalid appointment data or validation error</response>
-        /// <response code="404">Appointment not found</response>
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CancelAppointment(
-            [Required] Guid id,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                var command = new CancelAppointmentCommand(id);
-                await _mediator.Send(command, cancellationToken);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
-        }
 
         /// <summary>
         /// Retrieves a specific appointment by ID
@@ -186,4 +157,3 @@ namespace Api.Controllers
         }
     }
 }
-
