@@ -13,7 +13,6 @@ namespace Api
                 NotFoundException nf => new NotFoundObjectResult(new { error = nf.Message }),
                 DomainRuleViolationException drv => new BadRequestObjectResult(new { error = drv.Message }),
                 ValidationException v => new BadRequestObjectResult(new { error = v.Message }),
-                ArgumentException a => new BadRequestObjectResult(new { error = a.Message }),
                 _ => new ObjectResult(new { error = "An unexpected error occurred." }) { StatusCode = 500 }
             };
         }

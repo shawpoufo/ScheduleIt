@@ -1,4 +1,5 @@
 using System;
+using Domain.Common;
 using Domain.ValueObjects;
 using FluentAssertions;
 using Xunit;
@@ -17,7 +18,7 @@ namespace ScheduleIt.Xunit.Domain
             Action act = () => AppointmentTimeSlot.Create(now.AddMinutes(-10), now.AddMinutes(50), now);
             
             // assert
-            act.Should().Throw<ArgumentException>()
+            act.Should().Throw<DomainRuleViolationException>()
                 .WithMessage("*in the past*");
         }
 
@@ -35,7 +36,7 @@ namespace ScheduleIt.Xunit.Domain
             Action act = () => AppointmentTimeSlot.Create(start, end, now);
             
             // assert
-            act.Should().Throw<ArgumentException>()
+            act.Should().Throw<DomainRuleViolationException>()
                 .WithMessage("*at least 30 minutes*");
         }
 
@@ -51,7 +52,7 @@ namespace ScheduleIt.Xunit.Domain
             Action act = () => AppointmentTimeSlot.Create(start, end, now);
             
             // assert
-            act.Should().Throw<ArgumentException>()
+            act.Should().Throw<DomainRuleViolationException>()
                 .WithMessage("*before end time*");
         }
 

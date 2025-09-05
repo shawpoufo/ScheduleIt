@@ -56,7 +56,7 @@ namespace ScheduleIt.XUnit.Application
             Func<Task> act = () => handler.Handle(new GetAppointmentsInRangeQuery(DateTime.UtcNow, DateTime.UtcNow.AddHours(-1)), CancellationToken.None);
             
             // assert
-            await act.Should().ThrowAsync<ArgumentException>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]

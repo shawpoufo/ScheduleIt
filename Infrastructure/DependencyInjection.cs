@@ -12,7 +12,7 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("Database") ?? configuration["Database:ConnectionString"];
+            var connectionString = configuration.GetConnectionString("Container") ?? configuration["Database:ConnectionString"];
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString));
