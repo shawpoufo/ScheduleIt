@@ -2,8 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
 import CalendarPage from './pages/CalendarPage';
-import CustomersPage from './pages/CustomersPage';
-import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -12,8 +10,6 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<DashboardPage />} />
           <Route path="calendar" element={<CalendarPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
