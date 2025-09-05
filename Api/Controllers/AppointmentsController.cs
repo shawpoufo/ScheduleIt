@@ -128,11 +128,11 @@ namespace Api.Controllers
         /// <param name="id">Appointment ID</param>
         /// <param name="command">New status</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <response code="204">Status updated</response>
+        /// <response code="200">Status updated, returns new status</response>
         /// <response code="400">Invalid status or transition</response>
         /// <response code="404">Appointment not found</response>
         [HttpPatch("{id}/status")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus([Required] Guid id, [FromBody] UpdateAppointmentStatusCommand command, CancellationToken cancellationToken)
@@ -147,8 +147,8 @@ namespace Api.Controllers
 
             try
             {
-                await _mediator.Send(command, cancellationToken);
-                return NoContent();
+                var newStatus = await _mediator.Send(command, cancellationToken);
+                return Ok(new { id, status = newStatus });
             }
             catch (Exception ex)
             {

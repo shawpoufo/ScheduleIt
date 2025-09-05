@@ -9,7 +9,7 @@ using MediatR;
 
 namespace Application.Appointments.Commands.UpdateAppointmentStatus
 {
-    public sealed class UpdateAppointmentStatusCommandHandler : IRequestHandler<UpdateAppointmentStatusCommand>
+    public sealed class UpdateAppointmentStatusCommandHandler : IRequestHandler<UpdateAppointmentStatusCommand, AppointmentStatus>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -20,7 +20,7 @@ namespace Application.Appointments.Commands.UpdateAppointmentStatus
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Handle(UpdateAppointmentStatusCommand request, CancellationToken cancellationToken)
+        public async Task<AppointmentStatus> Handle(UpdateAppointmentStatusCommand request, CancellationToken cancellationToken)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId, cancellationToken);
             if (appointment == null)
@@ -29,8 +29,9 @@ namespace Application.Appointments.Commands.UpdateAppointmentStatus
             switch (request.Status)
             {
                 case AppointmentStatus.Scheduled:
-                    // No direct domain method to revert; allow only from InProgress/NoShow? For now do nothing.
+                    appointment.MarkAsScheduled();
                     break;
+
                 case AppointmentStatus.InProgress:
                     appointment.MarkAsInProgress();
                     break;
@@ -48,6 +49,7 @@ namespace Application.Appointments.Commands.UpdateAppointmentStatus
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return appointment.Status;
         }
     }
 }
