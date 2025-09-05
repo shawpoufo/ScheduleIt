@@ -11,9 +11,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Api.Controllers
 {
-    /// <summary>
-    /// Manages customer operations including creation and retrieval
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
@@ -27,14 +24,6 @@ namespace Api.Controllers
             _mediator = mediator;
         }
 
-        /// <summary>
-        /// Creates a new customer
-        /// </summary>
-        /// <param name="command">The customer creation details</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>The created customer ID</returns>
-        /// <response code="201">Customer successfully created</response>
-        /// <response code="400">Invalid customer data or validation error</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -53,13 +42,6 @@ namespace Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Searches customers by name or lists all customers
-        /// </summary>
-        /// <param name="search">Optional search term to filter customers by name</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>List of customers matching the search criteria</returns>
-        /// <response code="200">Customers found and returned</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchCustomers([FromQuery] string? search, CancellationToken cancellationToken)
@@ -76,14 +58,6 @@ namespace Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Retrieves a specific customer by ID
-        /// </summary>
-        /// <param name="id">The customer ID</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>The customer details</returns>
-        /// <response code="200">Customer found and returned</response>
-        /// <response code="404">Customer not found</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

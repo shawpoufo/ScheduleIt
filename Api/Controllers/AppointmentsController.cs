@@ -29,15 +29,6 @@ namespace Api.Controllers
             _mediator = mediator;
         }
 
-        /// <summary>
-        /// Books a new appointment for a customer
-        /// </summary>
-        /// <param name="command">The appointment booking details (CustomerId, StartUtc, EndUtc, Notes)</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>The created appointment ID</returns>
-        /// <response code="201">Appointment successfully booked</response>
-        /// <response code="400">Invalid appointment data or validation error</response>
-        /// <response code="404">Customer not found</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -58,9 +49,6 @@ namespace Api.Controllers
         }
 
 
-        /// <summary>
-        /// Retrieves dashboard stats for today: total count, today's count, and 5 upcoming today
-        /// </summary>
         [HttpGet("stats/today")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTodayStats([FromQuery] DateTime? nowUtc, CancellationToken cancellationToken)
@@ -79,15 +67,6 @@ namespace Api.Controllers
         }
 
 
-        /// <summary>
-        /// Retrieves appointments overlapping a date-time range (any status)
-        /// </summary>
-        /// <param name="startUtc">Range start (UTC)</param>
-        /// <param name="endUtc">Range end (UTC)</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>List of appointments in the range</returns>
-        /// <response code="200">Appointments retrieved successfully</response>
-        /// <response code="400">Invalid date parameters</response>
         [HttpGet("range")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -106,15 +85,6 @@ namespace Api.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Updates the status of an appointment
-        /// </summary>
-        /// <param name="id">Appointment ID</param>
-        /// <param name="command">New status</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <response code="200">Status updated, returns new status</response>
-        /// <response code="400">Invalid status or transition</response>
-        /// <response code="404">Appointment not found</response>
         [HttpPatch("{id}/status")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -140,13 +110,6 @@ namespace Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Permanently deletes an appointment
-        /// </summary>
-        /// <param name="id">Appointment ID</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <response code="204">Appointment deleted</response>
-        /// <response code="404">Appointment not found</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

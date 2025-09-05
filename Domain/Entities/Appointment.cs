@@ -5,7 +5,6 @@ using Domain.ValueObjects;
 
 namespace Domain.Entities
 {
-    // Domain/Entities/Appointment.cs
     public sealed class Appointment : AggregateRoot
     {
         public Guid CustomerId { get; private set; }
@@ -40,7 +39,6 @@ namespace Domain.Entities
             if (Status == AppointmentStatus.Canceled)
                 throw new DomainRuleViolationException("Appointment is already canceled.");
 
-            // Domain invariant: Prevent cancel after start
             if (TimeSlot.StartUtc <= now)
                 throw new DomainRuleViolationException("Cannot cancel an appointment that has already started or finished.");
 
@@ -89,7 +87,6 @@ namespace Domain.Entities
 
         public void MarkAsScheduled()
         {
-            // Idempotent if already scheduled; otherwise disallow reverting
             if (Status == AppointmentStatus.Scheduled)
                 return;
 

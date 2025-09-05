@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
 builder.Services.AddControllers()
                 .AddApplicationPart(typeof(Api.Class1).Assembly)
@@ -16,10 +15,8 @@ builder.Services.AddControllers()
                 {
                     o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger/OpenAPI
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -29,7 +26,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "A scheduling application API for managing appointments and customers",
     });
 
-    // Add XML comments if available
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -37,30 +33,26 @@ builder.Services.AddSwaggerGen(c =>
         c.IncludeXmlComments(xmlPath);
     }
     
-    // Add operation filters for better documentation
     c.CustomSchemaIds(type => type.Name);
 });
 
-// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Vite dev server and React dev server
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-// Application + Infrastructure
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Application.Application).Assembly));
 builder.Services.AddValidatorsFromAssembly(typeof(Application.Application).Assembly);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -76,7 +68,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Global exception handling
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -89,7 +80,6 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-// Enable CORS
 app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
