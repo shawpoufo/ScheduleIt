@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers()
-                .AddApplicationPart(typeof(Api.Class1).Assembly)
+                .AddApplicationPart(typeof(Api.AssemblyReference).Assembly)
                 .AddJsonOptions(o =>
                 {
                     o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -23,7 +23,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "ScheduleIt API",
         Version = "v1",
-        Description = "A scheduling application API for managing appointments and customers",
+        Description = "A scheduling application API for managing appointments",
     });
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -47,8 +47,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Application.Application).Assembly));
-builder.Services.AddValidatorsFromAssembly(typeof(Application.Application).Assembly);
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Application.AssemblyRefrence).Assembly));
+builder.Services.AddValidatorsFromAssembly(typeof(Application.AssemblyRefrence).Assembly);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();

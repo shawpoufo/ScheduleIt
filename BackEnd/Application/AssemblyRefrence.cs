@@ -1,7 +1,7 @@
 ﻿namespace Application
 {
 
-    public static class Application
+    public static class AssemblyRefrence
     {
     }
 }
