@@ -21,16 +21,21 @@ Clean, production-lean scheduling app demonstrating .NET 9 Clean Architecture wi
 
 ## Repository layout
 ```text
-ScheduleIt.sln
-├─ Domain/                 # Entities, ValueObjects, Domain events, exceptions
-├─ Application/            # CQRS handlers, DTOs, validators, app exceptions
-├─ Infrastructure/         # EF Core DbContext, repositories, migrations, UoW
-├─ Api/                    # Controllers, error mapping
-├─ App/                    # ASP.NET Core host (Program.cs, DI, Swagger)
-├─ FrontEnd/scheduleit/    # React + Vite app (TypeScript)
-├─ Tests/ScheduleIt.XUnit/ # Domain and Application unit tests
-├─ db-scripts/             # SQL bootstrap used by Docker db-init
-├─ docker-compose.yml      # API + Frontend + SQL Server services
+BackEnd/
+├─ ScheduleIt.sln
+├─ Domain/                   # Entities, ValueObjects, Domain events, exceptions
+├─ Application/              # CQRS handlers, DTOs, validators, app exceptions
+├─ Infrastructure/           # EF Core DbContext, repositories, migrations, UoW
+├─ Api/                      # Controllers, error mapping
+├─ App/                      # ASP.NET Core host (Program.cs, DI, Swagger)
+├─ db-scripts/               # SQL bootstrap used by Docker db-init
+└─ Tests/
+   └─ ScheduleIt.XUnit/      # Domain and Application unit tests
+
+FrontEnd/
+└─ scheduleit/               # React + Vite app (TypeScript)
+
+docker-compose.yml           # API + Frontend + SQL Server services
 ```
 
 ## Architecture overview
@@ -46,7 +51,7 @@ ScheduleIt.sln
 - **Infrastructure**
   - `AppDbContext` publishes domain events after `SaveChangesAsync` using MediatR.
   - SQL Server provider; repositories implement `ICustomerRepository` and `IAppointmentRepository` with `UnitOfWork`.
-  - Migrations generated and tracked; `db-scripts/migrations.sql` helps bootstrap in Docker.
+  - Migrations generated and tracked; `BackEnd/db-scripts/migrations.sql` helps bootstrap in Docker.
 - **API**
   - Controllers are small and delegate to MediatR. Errors are mapped centrally by `ProblemDetailsMapper`:
     - `NotFoundException` → 404
@@ -64,7 +69,7 @@ ScheduleIt.sln
 Prereqs: Docker Desktop
 
 ```bash
-docker-compose up -d
+docker compose up --build
 ```
 
 Services:
@@ -73,14 +78,16 @@ Services:
 - Frontend (Vite dev): `http://localhost:5173`
 - SQL Server: `localhost,3333` (DB `ScheduleIt`, user `sa`, pass `MyP@ssw0rd123`)
 
-The `db-init` service creates the DB and runs `db-scripts/migrations.sql` on first startup.
+Compose sets `ConnectionStrings__Database` so the API connects to the `sqlserver` container.
+
+The `db-init` service creates the DB and runs `BackEnd/db-scripts/migrations.sql` on first startup.
 
 ### Option B: Local development
 Prereqs: .NET 9 SDK, Node 20+, SQL Server (or run the DB via Docker Compose)
 
 1) Start API (Development)
 ```bash
-dotnet run --project App
+dotnet run --project BackEnd/App/App.csproj
 ```
 
 2) Start Frontend
@@ -129,7 +136,7 @@ return ex switch
 ```
 
 ## Testing
-- Project: `Tests/ScheduleIt.XUnit`
+- Project: `BackEnd/Tests/ScheduleIt.XUnit`
 - Coverage:
   - Domain: `Appointment` invariants, `AppointmentTimeSlot` guards
   - Application: command handlers for booking, updating status, deleting, and queries
