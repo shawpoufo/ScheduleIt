@@ -37,15 +37,8 @@ namespace Api.Controllers
             [FromBody] BookAppointmentCommand command,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var appointmentId = await _mediator.Send(command, cancellationToken);
-                return Created($"/api/appointments/{appointmentId}", new { id = appointmentId });
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var appointmentId = await _mediator.Send(command, cancellationToken);
+            return Created($"/api/appointments/{appointmentId}", new { id = appointmentId });
         }
 
 
@@ -53,17 +46,9 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTodayStats([FromQuery] DateTime? nowUtc, CancellationToken cancellationToken)
         {
-            try
-            {
-                var now = nowUtc ?? DateTime.UtcNow;
-                var query = new GetTodayStatsQuery(now);
-                var dto = await _mediator.Send(query, cancellationToken);
-                return Ok(dto);
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var query = new GetTodayStatsQuery(nowUtc);
+            var dto = await _mediator.Send(query, cancellationToken);
+            return Ok(dto);
         }
 
 
@@ -75,11 +60,6 @@ namespace Api.Controllers
             [FromQuery, Required] DateTime endUtc,
             CancellationToken cancellationToken)
         {
-            if (startUtc == default || endUtc == default)
-                return BadRequest(new { error = "startUtc and endUtc are required" });
-            if (startUtc >= endUtc)
-                return BadRequest(new { error = "startUtc must be before endUtc" });
-
             var query = new GetAppointmentsInRangeQuery(startUtc, endUtc);
             var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
@@ -91,23 +71,11 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus([Required] Guid id, [FromBody] UpdateAppointmentStatusCommand command, CancellationToken cancellationToken)
         {
-            if (command.AppointmentId == Guid.Empty)
-            {
-                command = command with { AppointmentId = id };
-            }
+            // Always trust the route id and override any body-provided id
+            command = command with { AppointmentId = id };
 
-            if (command.AppointmentId != id)
-                return BadRequest(new { error = "AppointmentId mismatch" });
-
-            try
-            {
-                var newStatus = await _mediator.Send(command, cancellationToken);
-                return Ok(new { id, status = newStatus });
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var newStatus = await _mediator.Send(command, cancellationToken);
+            return Ok(new { id, status = newStatus });
         }
 
         [HttpDelete("{id}")]
@@ -115,15 +83,8 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete([Required] Guid id, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _mediator.Send(new DeleteAppointmentCommand(id), cancellationToken);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            await _mediator.Send(new DeleteAppointmentCommand(id), cancellationToken);
+            return NoContent();
         }
     }
 }

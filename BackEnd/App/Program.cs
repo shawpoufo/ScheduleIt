@@ -5,6 +5,9 @@ using Application.Common;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Api.Middleware;
+using Application.Behaviors;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Application.AssemblyRefrence).Assembly));
 builder.Services.AddValidatorsFromAssembly(typeof(Application.AssemblyRefrence).Assembly);
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -68,17 +72,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
-        
-        var error = new { error = "An unexpected error occurred." };
-        await context.Response.WriteAsJsonAsync(error);
-    });
-});
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseCors("AllowFrontend");
 

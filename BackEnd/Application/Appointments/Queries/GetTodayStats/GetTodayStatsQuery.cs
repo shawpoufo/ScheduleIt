@@ -4,7 +4,15 @@ using MediatR;
 
 namespace Application.Appointments.Queries.GetTodayStats
 {
-    public sealed record GetTodayStatsQuery(DateTime TodayUtc) : IRequest<TodayStatsDto>;
+    public sealed record GetTodayStatsQuery : IRequest<TodayStatsDto>
+    {
+        public DateTime TodayUtc { get; }
+
+        public GetTodayStatsQuery(DateTime? todayUtc = null)
+        {
+            TodayUtc = todayUtc ?? DateTime.UtcNow;
+        }
+    }
 
     public sealed record TodayStatsDto(
         int TotalAppointments,

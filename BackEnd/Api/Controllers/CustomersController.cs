@@ -31,31 +31,17 @@ namespace Api.Controllers
             [FromBody] CreateCustomerCommand command,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var customerId = await _mediator.Send(command, cancellationToken);
-                return CreatedAtAction(nameof(GetCustomer), new { id = customerId }, new { id = customerId });
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var customerId = await _mediator.Send(command, cancellationToken);
+            return CreatedAtAction(nameof(GetCustomer), new { id = customerId }, new { id = customerId });
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchCustomers([FromQuery] string? search, CancellationToken cancellationToken)
         {
-            try
-            {
-                var query = new SearchCustomersQuery(search);
-                var customers = await _mediator.Send(query, cancellationToken);
-                return Ok(customers);
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var query = new SearchCustomersQuery(search);
+            var customers = await _mediator.Send(query, cancellationToken);
+            return Ok(customers);
         }
 
         [HttpGet("{id}")]
@@ -63,16 +49,9 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCustomer([Required] Guid id, CancellationToken cancellationToken)
         {
-            try
-            {
-                var query = new GetCustomerQuery(id);
-                var customer = await _mediator.Send(query, cancellationToken);
-                return Ok(customer);
-            }
-            catch (Exception ex)
-            {
-                return ProblemDetailsMapper.Map(ex);
-            }
+            var query = new GetCustomerQuery(id);
+            var customer = await _mediator.Send(query, cancellationToken);
+            return Ok(customer);
         }
     }
 }
